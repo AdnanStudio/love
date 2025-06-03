@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>একটি বিশেষ প্রস্তাব</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&family=Dancing+Script:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', 'Arial', sans-serif;
+            background-color: #f0f2f5; /* প্রাথমিক পটভূমি */
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            line-height: 1.7;
+            overflow-x: hidden; /* শুধু অনুভূমিক স্ক্রল বন্ধ (সাধারণত ভালো) */
+            /* overflow-y: auto; - প্রাথমিকভাবে উল্লম্ব স্ক্রল চালু থাকবে (ডিফল্ট) */
+            transition: background-color 0.5s ease;
+        }
+        body.fireworks-active {
+            background-color: #000; /* আতশবাজির জন্য কালো পটভূমি */
+            overflow: hidden; /* আতশবাজি চলাকালীন সবদিকের স্ক্রল বন্ধ */
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        .content-wrapper.hidden {
+            opacity: 0;
+            pointer-events: none; /* অদৃশ্য হলে যেন ক্লিক না করা যায় */
+            height: 0; /* লেআউট থেকে সম্পূর্ণ সরাতে সাহায্য করতে পারে */
+            overflow: hidden; /* নিশ্চিত করে ভেতরের কিছু দেখা যাবে না */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .name-card {
+            border-radius: 18px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            border-left: 6px solid transparent;
+            background: white;
+        }
+        .name-card:hover { /* হোভার ইফেক্ট নামের কার্ডে */
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .name-card h2 {
+            margin-bottom: 25px;
+            font-size: 2em;
+            text-align: center;
+            font-weight: 700;
+        }
+        .main-emoji {
+            display: inline-block;
+            transition: transform 0.3s ease-in-out;
+        }
+        .emoji-animate {
+            animation: pulseEmoji 0.7s ease-in-out;
+        }
+        @keyframes pulseEmoji {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.35) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .meaning-title,
+        .interpretation-title {
+            font-weight: 700;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+        .meaning-breakdown {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+        .meaning-breakdown li {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 1.05em;
+            color: #333;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer;
+        }
+        .meaning-breakdown li:hover {
+            background-color: rgba(255, 255, 255, 1);
+            transform: translateX(8px) scale(1.02);
+        }
+        .meaning-breakdown li.highlighted { /* লিস্ট আইটেম হাইলাইটের জন্য */
+            font-weight: bold;
+        }
+        .interpretation-text {
+            font-size: 1.35em;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            transition: transform 0.3s ease;
+        }
+        .name-card:hover .interpretation-text {
+            transform: scale(1.05);
+        }
+
+        /* নামের কার্ডের থিম */
+        .card-jerin { border-left-color: #FFBF00; background: linear-gradient(135deg, #fffcf2, #fff8e1); }
+        .card-jerin h2 { color: #C58917; } .card-jerin .meaning-title, .card-jerin .interpretation-title { color: #AF6D0A; }
+        .card-jerin .interpretation-text { color: #804A00; background-color: #FFF8DC; border: 2px dashed #FADA5E; }
+        .card-jerin .meaning-breakdown li.highlighted { background-color: #fff0c7 !important; }
+
+        .card-akash { border-left-color: #5DADE2; background: linear-gradient(135deg, #f2f8ff, #e6f3ff); }
+        .card-akash h2 { color: #2E86C1; } .card-akash .meaning-title, .card-akash .interpretation-title { color: #1B4F72; }
+        .card-akash .interpretation-text { color: #154360; background-color: #EBF5FB; border: 2px dashed #AED6F1; }
+        .card-akash .meaning-breakdown li.highlighted { background-color: #d6eaf8 !important; }
+
+
+        /* ভালোবাসার সেকশনের স্টাইল */
+        .love-confession-section {
+            margin-top: 40px;
+            padding: 35px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            border-top: 6px solid #e84393;
+        }
+
+        .names-display { font-size: 2em; font-weight: 700; margin-bottom: 20px; color: #333; }
+        .names-display .name-akash { color: #2E86C1; }
+        .names-display .name-jerin { color: #C58917; }
+        .names-display .plus-sign { color: #e84393; margin: 0 12px; font-size: 0.9em; }
+        
+        .click-instruction {
+            font-size: 1.1em;
+            color: #e84393;
+            margin-bottom: 25px;
+            font-weight: bold;
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
+        }
+        .click-instruction.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .heart-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            min-height: 100px;
+        }
+        .heart-shape {
+            position: relative;
+            width: 100px;
+            height: 90px;
+            cursor: pointer;
+            z-index: 1; /* Love টেক্সটের চেয়ে নিচে (যদি z-index যুদ্ধ হয়) */
+            transition: transform 0.2s ease;
+        }
+        .heart-shape:not(.broken):hover {
+            transform: scale(1.15);
+        }
+        .heart-half {
+            position: absolute;
+            width: 50px;
+            height: 80px;
+            background-color: #e84393;
+            border-radius: 50px 50px 0 0;
+            transition: transform 0.7s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+        }
+        .heart-left {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+        .heart-right {
+            left: 50px;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+        .heart-shape.broken .heart-left {
+            transform: rotate(65deg) translateX(35px) translateY(-25px) scale(0.95);
+        }
+        .heart-shape.broken .heart-right {
+            transform: rotate(-65deg) translateX(-35px) translateY(-25px) scale(0.95);
+        }
+        
+        .middle-love-text {
+            position: absolute;
+            top: calc(40% - 25px); /* Love টেক্সট একটু উপরে */
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Dancing Script', cursive;
+            font-size: 4.5em;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.6s 0.4s ease, transform 0.8s 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: colorChangeLove 4s infinite linear;
+            animation-play-state: paused;
+            z-index: 2; /* হার্টের উপরে থাকবে */
+        }
+        .middle-love-text.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            animation-play-state: running;
+        }
+        
+        @keyframes colorChangeLove {
+            0%   { color: #ff4757; text-shadow: 0 0 5px #ff4757; } 25%  { color: #ff6b81; text-shadow: 0 0 7px #ff6b81; }
+            50%  { color: #e84393; text-shadow: 0 0 10px #e84393;} 75%  { color: #fd79a8; text-shadow: 0 0 7px #fd79a8;}
+            100% { color: #ff4757; text-shadow: 0 0 5px #ff4757; }
+        }
+
+
+        /* ---------- আতশবাজি এবং চূড়ান্ত মেসেজের স্টাইল ---------- */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        #fireworks-canvas.visible {
+            opacity: 1;
+        }
+
+        .proposal-message-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .proposal-message-container.show-message {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 1s 1s ease-in; /* আতশবাজি শুরু হওয়ার ১ সেকেন্ড পর মেসেজ আসবে */
+        }
+
+        #final-proposal-message {
+            font-family: 'Great Vibes', cursive;
+            font-size: 5vw; /* স্ক্রিনের আকারের সাথে মানানসই, min 40px ও দেওয়া যায় */
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ff69b4, 0 0 40px #ff69b4;
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        
+        .proposal-message-container.show-message #final-proposal-message {
+            transform: scale(1);
+            opacity: 1;
+            transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 1s ease-out;
+            transition-delay: 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="content-wrapper" id="mainContent">
+        <div class="container">
+            <div class="name-card card-jerin">
+                <h2><span class="main-emoji">✨</span> কাবিরু জাহান জেরিন</h2>
+                <p class="meaning-title">📜 অর্থ:</p>
+                <ul class="meaning-breakdown">
+                    <li>কাবিরু – ✨ মহান / বিশাল</li>
+                    <li>জাহান – 🌍 জগৎ / পৃথিবী</li>
+                    <li>জেরিন – 💛 স্বর্ণ / সোনালী</li>
+                </ul>
+                <p class="interpretation-title">💫 ভাবার্থ:</p>
+                <p class="interpretation-text">💛✨🌍 "স্বর্ণের বিশাল জগৎ"</p>
+            </div>
+            <div class="name-card card-akash">
+                <h2><span class="main-emoji">☁️</span> আদনান হোসেন আকাশ</h2>
+                <p class="meaning-title">📜 অর্থ:</p>
+                <ul class="meaning-breakdown">
+                    <li>আদনান – 🕌 জান্নাতের অধিবাসী</li>
+                    <li>হোসেন – 🌸 সুন্দর / পবিত্র</li>
+                    <li>আকাশ – ☁️ বিশালতা / সীমাহীনতা</li>
+                </ul>
+                <p class="interpretation-title">💫 ভাবার্থ:</p>
+                <p class="interpretation-text">🌸☁️🕌 "সুন্দর বিশাল জান্নাতের অধিকারী"</p>
+            </div>
+        </div>
+
+        <div class="love-confession-section">
+            <div class="names-display">
+                <span class="name-akash">আকাশ</span>
+                <span class="plus-sign">+</span>
+                <span class="name-jerin">জেরিন</span>
+            </div>
+            <div class="click-instruction" id="clickInstruction">এখানে ক্লিক করুন ❤️</div>
+            <div class="heart-container" id="clickableHeartContainer">
+                <div class="heart-shape" id="mainHeartShape">
+                    <div class="heart-half heart-left"></div>
+                    <div class="heart-half heart-right"></div>
+                </div>
+                <div class="middle-love-text" id="middleLoveText">Love</div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="fireworks-canvas"></canvas>
+    <div class="proposal-message-container" id="proposalMessageContainer">
+        <div id="final-proposal-message">I ❤️ You Jerin</div>
+    </div>
+
+    <script>
+    // আতশবাজির জন্য স্ক্রিপ্ট
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+    let fireworks = [];
+    let particles = [];
+
+    function setupCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function Firework(sx, sy, tx, ty) {
+        this.x = sx; this.y = sy; this.sx = sx; this.sy = sy; this.tx = tx; this.ty = ty;
+        this.distanceToTarget = Math.sqrt(Math.pow(tx - sx, 2) + Math.pow(ty - sy, 2));
+        this.distanceTraveled = 0;
+        this.coordinates = []; this.coordinateCount = 3;
+        while (this.coordinateCount--) { this.coordinates.push([this.x, this.y]); }
+        this.angle = Math.atan2(ty - sy, tx - sx);
+        this.speed = 2; this.acceleration = 1.05;
+        this.brightness = Math.random() * 50 + 50; this.targetRadius = 1;
+    }
+    Firework.prototype.update = function (index) {
+        this.coordinates.pop(); this.coordinates.unshift([this.x, this.y]);
+        if (this.targetRadius < 8) { this.targetRadius += 0.3; } else { this.targetRadius = 1; }
+        this.speed *= this.acceleration;
+        let vx = Math.cos(this.angle) * this.speed; let vy = Math.sin(this.angle) * this.speed;
+        this.distanceTraveled = Math.sqrt(Math.pow(this.x + vx - this.sx, 2) + Math.pow(this.y + vy - this.sy, 2));
+        if (this.distanceTraveled >= this.distanceToTarget) {
+            createParticles(this.tx, this.ty); fireworks.splice(index, 1);
+        } else { this.x += vx; this.y += vy; }
+    };
+    Firework.prototype.draw = function () {
+        ctx.beginPath();
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = 'hsl(' + Math.random() * 360 + ', 100%, ' + this.brightness + '%)';
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2); ctx.stroke();
+    };
+    function Particle(x, y) {
+        this.x = x; this.y = y; this.coordinates = []; this.coordinateCount = 5;
+        while (this.coordinateCount--) { this.coordinates.push([this.x, this.y]); }
+        this.angle = Math.random() * Math.PI * 2; this.speed = Math.random() * 10 + 1;
+        this.friction = 0.95; this.gravity = 1; this.hue = Math.random() * 360;
+        this.brightness = Math.random() * 50 + 50; this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.015;
+    }
+    Particle.prototype.update = function (index) {
+        this.coordinates.pop(); this.coordinates.unshift([this.x, this.y]);
+        this.speed *= this.friction;
+        this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed + this.gravity;
+        this.alpha -= this.decay;
+        if (this.alpha <= this.decay) { particles.splice(index, 1); }
+    };
+    Particle.prototype.draw = function () {
+        ctx.beginPath();
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')';
+        ctx.stroke();
+    };
+    function createParticles(x, y) {
+        let particleCount = 100;
+        while (particleCount--) { particles.push(new Particle(x, y)); }
+    }
+    let animationInterval;
+    function loop() {
+        animationInterval = requestAnimationFrame(loop);
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = fireworks.length - 1; i >= 0; i--) { fireworks[i].draw(); fireworks[i].update(i); }
+        for (let i = particles.length - 1; i >= 0; i--) { particles[i].draw(); particles[i].update(i); }
+    }
+    function launchFirework() {
+        if (fireworks.length < 15) {
+            let startX = canvas.width / 2; let startY = canvas.height;
+            let targetX = Math.random() * (canvas.width * 0.8) + (canvas.width * 0.1);
+            let targetY = Math.random() * (canvas.height / 2);
+            fireworks.push(new Firework(startX, startY, targetX, targetY));
+        }
+    }
+
+    // মূল লজিক
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainContent = document.getElementById('mainContent');
+        const clickableHeartContainer = document.getElementById('clickableHeartContainer');
+        const mainHeartShape = document.getElementById('mainHeartShape');
+        const clickInstruction = document.getElementById('clickInstruction');
+        const middleLoveText = document.getElementById('middleLoveText');
+        const proposalMessageContainer = document.getElementById('proposalMessageContainer');
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        
+        let heartAlreadyClicked = false;
+        let fireworkLaunchInterval;
+
+        // নামের কার্ডগুলোর অ্যানিমেশন এবং লিস্ট আইটেম হাইলাইট
+        const cards = document.querySelectorAll('.name-card');
+        cards.forEach(card => {
+            const mainEmoji = card.querySelector('.main-emoji');
+            if (mainEmoji) {
+                card.addEventListener('mouseenter', () => {
+                    mainEmoji.classList.remove('emoji-animate'); 
+                    void mainEmoji.offsetWidth; 
+                    mainEmoji.classList.add('emoji-animate');
+                });
+                mainEmoji.addEventListener('animationend', () => { mainEmoji.classList.remove('emoji-animate'); });
+            }
+            const listItems = card.querySelectorAll('.meaning-breakdown li');
+            listItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    listItems.forEach(li => li.classList.remove('highlighted'));
+                    item.classList.add('highlighted');
+                });
+            });
+        });
+
+        clickableHeartContainer.addEventListener('click', () => {
+            if (heartAlreadyClicked) return;
+            heartAlreadyClicked = true; 
+
+            mainHeartShape.classList.add('broken');
+            middleLoveText.classList.add('show');
+            clickableHeartContainer.style.cursor = 'default';
+            // clickInstruction ও content-wrapper একসাথে হাইড হবে
+            
+            setTimeout(() => {
+                mainContent.classList.add('hidden'); // পুরো কন্টেন্ট অদৃশ্য
+                document.body.classList.add('fireworks-active'); // পটভূমি ও স্ক্রল নিয়ন্ত্রণ
+
+                fireworksCanvas.classList.add('visible');
+                setupCanvas();
+                loop(); 
+                
+                fireworkLaunchInterval = setInterval(launchFirework, 600); 
+                proposalMessageContainer.classList.add('show-message');
+
+                setTimeout(() => {
+                    clearInterval(fireworkLaunchInterval);
+                }, 10000); // ১০ সেকেন্ড পর নতুন আতশবাজি তৈরি বন্ধ
+                 setTimeout(() => {
+                    // fireworksCanvas.style.opacity = '0.3'; // যদি চান, আতশবাজি হালকা করে দিতে পারেন
+                 }, 12000);
+
+            }, 800); // হার্ট ভাঙার ইফেক্টের জন্য ০.৮ সেকেন্ড ডিলে
+        });
+        
+        window.addEventListener('resize', setupCanvas); // উইন্ডো রিসাইজ হলে ক্যানভাস অ্যাডজাস্ট
+        setupCanvas(); // প্রাথমিক ভাবে একবার ক্যানভাস সেটআপ (যদিও ক্লিক না করা পর্যন্ত দেখা যাবে না)
+    });
+    </script>
+</body>
+</html>
